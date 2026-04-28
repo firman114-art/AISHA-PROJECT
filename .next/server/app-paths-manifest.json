@@ -1,0 +1,9 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js",
+  "/guru/setoran/page": "app/guru/setoran/page.js",
+  "/guru/jurnal/page": "app/guru/jurnal/page.js",
+  "/guru/absensi/page": "app/guru/absensi/page.js",
+  "/guru/dashboard/page": "app/guru/dashboard/page.js"
+}
