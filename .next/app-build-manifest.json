@@ -31,25 +31,20 @@
       "static/chunks/main-app.js",
       "static/chunks/app/guru/layout.js"
     ],
+    "/guru/dashboard/siswa/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/guru/dashboard/siswa/page.js"
+    ],
     "/guru/absensi/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/guru/absensi/page.js"
     ],
-    "/guru/jurnal/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/guru/jurnal/page.js"
-    ],
     "/guru/setoran/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/guru/setoran/page.js"
-    ],
-    "/_not-found/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
     ]
   }
 }
