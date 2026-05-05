@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Search, BookOpen, GraduationCap, Users, Phone, Mail, MapPin, ChevronRight } from 'lucide-react'
+import { Search, BookOpen, GraduationCap, Users, ChevronRight } from 'lucide-react'
 import clsx from 'clsx'
 
 // Mock data untuk pencarian murid
@@ -42,12 +42,17 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-md overflow-hidden border-2 border-red-600">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
+                  src="/IMG_5195.jpg" 
+                  alt="SDIT Al-Insan Logo" 
+                  className="object-contain max-w-full max-h-full"
+                />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-slate-900">Assalamualaikum</h1>
-                <p className="text-xs text-red-600">Pinrang</p>
+                <p className="text-xs text-red-600">SDIT Al-Insan Pinrang</p>
               </div>
             </div>
             <Link
@@ -193,8 +198,15 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="bg-red-900 text-red-100 py-8">
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <BookOpen className="w-6 h-6" />
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img 
+                src="/IMG_5195.jpg" 
+                alt="SDIT Al-Insan Logo" 
+                className="object-contain max-w-full max-h-full"
+              />
+            </div>
             <h4 className="text-lg font-semibold text-white">SDIT Al-Insan Pinrang</h4>
           </div>
           <p className="text-red-300 text-sm">

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BookOpen, Users, GraduationCap, LogOut, LayoutDashboard, UserPlus } from 'lucide-react'
+import { Users, GraduationCap, LogOut, LayoutDashboard, UserPlus } from 'lucide-react'
 import clsx from 'clsx'
 
 interface SidebarItem {
@@ -25,8 +25,13 @@ export default function Sidebar({ items, userRole, userName }: SidebarProps) {
       {/* Logo */}
       <div className="p-6 border-b border-red-800">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-md">
-            <BookOpen className="w-6 h-6 text-red-600" />
+          <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-md overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
+              src="/IMG_5195.jpg" 
+              alt="SDIT Al-Insan Logo" 
+              className="object-contain max-w-full max-h-full"
+            />
           </div>
           <div>
             <h1 className="font-bold text-lg">AISHA</h1>

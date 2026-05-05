@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { BookOpen, Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle } from 'lucide-react'
+import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -58,8 +58,13 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Header */}
           <div className="bg-red-600 px-8 py-6 text-center">
-            <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <BookOpen className="w-8 h-8 text-red-600" />
+            <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img 
+                src="/IMG_5195.jpg" 
+                alt="SDIT Al-Insan Logo" 
+                className="object-contain max-w-full max-h-full"
+              />
             </div>
             <h1 className="text-2xl font-bold text-white">AISHA</h1>
             <p className="text-red-100 mt-1">Al-Insan Student Hafidz Achievement</p>
