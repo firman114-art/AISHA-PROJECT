@@ -3,13 +3,13 @@
 import { useState } from 'react'
 import { Plus, Search, Edit2, Trash2, MoreVertical, GraduationCap } from 'lucide-react'
 
-// Mock data murid
+// Mock data murid (Nama, Kelas, NIS saja)
 const mockMurid = [
-  { id: 1, nama: 'Ahmad Fauzi', nis: '2024001', kelas: 'Kelas 1', tahun_masuk: 2024, total_hafalan: 5, total_jilid: 2 },
-  { id: 2, nama: 'Muhammad Rizky', nis: '2024002', kelas: 'Kelas 2', tahun_masuk: 2023, total_hafalan: 8, total_jilid: 3 },
-  { id: 3, nama: 'Fatimah Azzahra', nis: '2024003', kelas: 'Kelas 1', tahun_masuk: 2024, total_hafalan: 3, total_jilid: 1 },
-  { id: 4, nama: 'Aisyah Putri', nis: '2024004', kelas: 'Kelas 3', tahun_masuk: 2022, total_hafalan: 12, total_jilid: 4 },
-  { id: 5, nama: 'Umar bin Khattab', nis: '2024005', kelas: 'Kelas 2', tahun_masuk: 2023, total_hafalan: 6, total_jilid: 2 },
+  { id: 1, nama: 'Ahmad Fauzi', nis: '2024001', kelas: 'Kelas 1', total_hafalan: 5, total_jilid: 2 },
+  { id: 2, nama: 'Muhammad Rizky', nis: '2024002', kelas: 'Kelas 2', total_hafalan: 8, total_jilid: 3 },
+  { id: 3, nama: 'Fatimah Azzahra', nis: '2024003', kelas: 'Kelas 1', total_hafalan: 3, total_jilid: 1 },
+  { id: 4, nama: 'Aisyah Putri', nis: '2024004', kelas: 'Kelas 3', total_hafalan: 12, total_jilid: 4 },
+  { id: 5, nama: 'Umar bin Khattab', nis: '2024005', kelas: 'Kelas 2', total_hafalan: 6, total_jilid: 2 },
 ]
 
 export default function ManajemenMuridPage() {
@@ -61,7 +61,6 @@ export default function ManajemenMuridPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">NIS</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kelas</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tahun Masuk</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hafalan</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jilid</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
@@ -73,7 +72,6 @@ export default function ManajemenMuridPage() {
                   <td className="px-6 py-4 text-sm text-gray-800 font-medium">{murid.nis}</td>
                   <td className="px-6 py-4 text-sm text-gray-800">{murid.nama}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{murid.kelas}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{murid.tahun_masuk}</td>
                   <td className="px-6 py-4 text-sm">
                     <span className="px-2 py-1 bg-red-100 text-red-700 rounded">
                       {murid.total_hafalan} Surat

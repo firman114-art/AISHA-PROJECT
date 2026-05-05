@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import { Plus, Search, Edit2, Trash2, GraduationCap } from 'lucide-react'
 
-// Mock data guru
+// Mock data guru (Wali Kelas)
 const mockGuru = [
-  { id: 1, nama: 'Ust. Abdullah', email: 'abdullah@alihsan.sch.id', no_hp: '08123456789', mata_pelajaran: 'Hafalan', jumlah_murid: 25 },
-  { id: 2, nama: 'Ust. Ahmad', email: 'ahmad@alihsan.sch.id', no_hp: '08123456790', mata_pelajaran: 'Tilawah', jumlah_murid: 30 },
-  { id: 3, nama: 'Ustz. Fatimah', email: 'fatimah@alihsan.sch.id', no_hp: '08123456791', mata_pelajaran: 'Jilid', jumlah_murid: 28 },
-  { id: 4, nama: 'Ust. Muhammad', email: 'muhammad@alihsan.sch.id', no_hp: '08123456792', mata_pelajaran: 'Hafalan', jumlah_murid: 22 },
+  { id: 1, nama: 'Ust. Abdullah', email: 'abdullah@alihsan.sch.id', no_hp: '08123456789', jumlah_murid: 25 },
+  { id: 2, nama: 'Ust. Ahmad', email: 'ahmad@alihsan.sch.id', no_hp: '08123456790', jumlah_murid: 30 },
+  { id: 3, nama: 'Ustz. Fatimah', email: 'fatimah@alihsan.sch.id', no_hp: '08123456791', jumlah_murid: 28 },
+  { id: 4, nama: 'Ust. Muhammad', email: 'muhammad@alihsan.sch.id', no_hp: '08123456792', jumlah_murid: 22 },
 ]
 
 export default function ManajemenGuruPage() {
@@ -60,7 +60,6 @@ export default function ManajemenGuruPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. HP</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mata Pelajaran</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Murid</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
               </tr>
@@ -78,11 +77,6 @@ export default function ManajemenGuruPage() {
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">{guru.email}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{guru.no_hp}</td>
-                  <td className="px-6 py-4">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm">
-                      {guru.mata_pelajaran}
-                    </span>
-                  </td>
                   <td className="px-6 py-4 text-sm text-gray-600">{guru.jumlah_murid} murid</td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex items-center space-x-2">
