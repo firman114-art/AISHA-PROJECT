@@ -1,8 +1,1 @@
-{
-  "/page": "app/page.js",
-  "/login/page": "app/login/page.js",
-  "/guru/absensi/page": "app/guru/absensi/page.js",
-  "/guru/setoran/page": "app/guru/setoran/page.js",
-  "/guru/dashboard/page": "app/guru/dashboard/page.js",
-  "/guru/dashboard/siswa/page": "app/guru/dashboard/siswa/page.js"
-}
+{}
