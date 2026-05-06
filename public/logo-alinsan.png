@@ -1,0 +1,32 @@
+<svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="250" cy="250" r="240" fill="none" stroke="#e32219" stroke-width="8"/>
+  
+  <path d="M 42,380 Q 250,520 458,380 L 458,250 Q 458,460 250,460 Q 42,460 42,250 Z" fill="#e32219" />
+
+  <defs>
+    <path id="upperPath" d="M 80,200 A 180,180 0 0 1 420,200" />
+    <path id="lowerPath" d="M 80,380 A 220,220 0 0 0 420,380" />
+  </defs>
+  
+  <text fill="#e32219" font-family="Arial, sans-serif" font-weight="bold" font-size="42">
+    <textPath href="#upperPath" startOffset="50%" text-anchor="middle">SDIT AL-INSAN</textPath>
+  </text>
+
+  <text fill="white" font-family="Arial, sans-serif" font-weight="bold" font-size="24">
+    <textPath href="#lowerPath" startOffset="50%" text-anchor="middle">SEKOLAH DASAR ISLAM TERPADU</textPath>
+  </text>
+
+  <text x="250" y="360" fill="#e32219" font-family="Arial, sans-serif" font-weight="bold" font-size="18" text-anchor="middle">KABUPATEN PINRANG</text>
+
+  <path d="M 250,330 L 150,280 L 170,180 Q 250,140 330,180 L 350,280 Z" fill="none" stroke="#e32219" stroke-width="5" />
+  <line x1="250" y1="330" x2="250" y2="170" stroke="#e32219" stroke-width="5" />
+  
+  <path d="M 180,180 Q 250,80 320,180" fill="none" stroke="#e32219" stroke-width="5" />
+  <path d="M 240,80 A 20,20 0 1 1 260,105 A 15,15 0 1 0 240,80" fill="#e32219" />
+  
+  <path d="M 250,230 L 250,140 M 240,160 Q 250,150 260,160 M 240,180 Q 250,170 260,180" fill="none" stroke="#e32219" stroke-width="3" />
+
+  <text x="210" y="240" fill="#e32219" font-size="20" text-anchor="middle" font-family="serif">من تعلم</text>
+  <text x="290" y="240" fill="#e32219" font-size="20" text-anchor="middle" font-family="serif">القرآن</text>
+</svg>
+
