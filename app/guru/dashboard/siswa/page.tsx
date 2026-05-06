@@ -15,7 +15,9 @@ import {
   AlertCircle,
   TrendingUp,
   FileText,
-  History
+  History,
+  Star,
+  Info
 } from 'lucide-react'
 import { DAFTAR_KELAS, DAFTAR_SISWA, Siswa } from '@/lib/constants/kelas-siswa'
 
@@ -44,6 +46,7 @@ interface SiswaWithProgress extends Siswa {
   totalSetoran?: number
   kelasNama?: string
   jenjang?: string
+  bintangBulanIni?: number
 }
 
 const PREDIKAT_COLORS: Record<string, string> = {
@@ -62,6 +65,15 @@ const PREDIKAT_LABELS: Record<string, string> = {
   dhaif: 'Dha\'if',
 }
 
+// Mapping predikat ke nilai bintang
+const PREDIKAT_BINTANG: Record<string, number> = {
+  mumtaz: 3,
+  jayyid_jiddan: 2,
+  jayyid: 1,
+  maqbul: 0,
+  dhaif: 0,
+}
+
 export default function DataSiswaPage() {
   const supabase = createBrowserClient()
   
@@ -74,12 +86,17 @@ export default function DataSiswaPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [loadingRiwayat, setLoadingRiwayat] = useState(false)
 
-  // Fetch siswa dengan progress terakhir
+  // Fetch siswa dengan progress terakhir dan bintang bulan ini
   useEffect(() => {
     const fetchSiswaData = async () => {
       setLoading(true)
       
       try {
+        // Hitung tanggal awal dan akhir bulan ini
+        const now = new Date()
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString()
+
         // Ambil semua progress_logs untuk mendapatkan data terakhir
         const { data: progressData, error: progressError } = await supabase
           .from('progress_logs')
@@ -88,6 +105,17 @@ export default function DataSiswaPage() {
 
         if (progressError) {
           console.error('Error fetching progress:', progressError)
+        }
+
+        // Ambil progress_logs bulan ini untuk perhitungan bintang
+        const { data: monthlyProgressData, error: monthlyError } = await supabase
+          .from('progress_logs')
+          .select('*')
+          .gte('created_at', startOfMonth)
+          .lte('created_at', endOfMonth)
+
+        if (monthlyError) {
+          console.error('Error fetching monthly progress:', monthlyError)
         }
 
         // Create kelas lookup map with string keys
@@ -101,12 +129,22 @@ export default function DataSiswaPage() {
           const lastProgress = siswaProgress[0]
           const kelasInfo = kelasMap.get(siswa.kelasId as string)
           
+          // Hitung bintang bulan ini
+          const siswaMonthlyProgress = monthlyProgressData?.filter(
+            (p: ProgressLog) => p.murid_id === siswa.id
+          ) || []
+          
+          const totalBintang = siswaMonthlyProgress.reduce((total: number, progress: ProgressLog) => {
+            return total + (PREDIKAT_BINTANG[progress.predikat] || 0)
+          }, 0)
+          
           return {
             ...siswa,
             lastProgress,
             totalSetoran: siswaProgress.length,
             kelasNama: kelasInfo?.nama || siswa.kelasId,
-            jenjang: kelasInfo?.jenjang || '-'
+            jenjang: kelasInfo?.jenjang || '-',
+            bintangBulanIni: totalBintang
           }
         })
 
@@ -114,7 +152,7 @@ export default function DataSiswaPage() {
       } catch (err) {
         console.error('Error:', err)
         // Fallback ke data mock jika error
-        setSiswaList(DAFTAR_SISWA.map((s: Siswa) => ({ ...s, totalSetoran: 0 })))
+        setSiswaList(DAFTAR_SISWA.map((s: Siswa) => ({ ...s, totalSetoran: 0, bintangBulanIni: 0 })))
       } finally {
         setLoading(false)
       }
@@ -284,7 +322,12 @@ export default function DataSiswaPage() {
                       Predikat
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <div className="flex items-center justify-center">
+                      <Star className="w-3 h-3 mr-1 text-yellow-500" />
+                      Bintang Prestasi
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
@@ -335,13 +378,37 @@ export default function DataSiswaPage() {
                       )}
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <button
-                        onClick={() => handleLihatBukuSaku(siswa)}
-                        className="inline-flex items-center px-3 py-1.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors shadow-sm"
-                      >
-                        <History className="w-4 h-4 mr-1.5" />
-                        Lihat Buku Saku
-                      </button>
+                      <div className="group relative inline-flex flex-col items-center">
+                        <div className={`inline-flex items-center px-3 py-1.5 rounded-lg font-semibold ${
+                          (siswa.bintangBulanIni || 0) > 10 
+                            ? 'bg-gradient-to-r from-yellow-300 to-yellow-500 text-yellow-900 shadow-lg shadow-yellow-200 animate-pulse' 
+                            : (siswa.bintangBulanIni || 0) > 0 
+                              ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' 
+                              : 'bg-gray-100 text-gray-400 border border-gray-200'
+                        }`}>
+                          <Star className={`w-4 h-4 mr-1.5 ${
+                            (siswa.bintangBulanIni || 0) > 10 ? 'text-yellow-800 fill-current' : 'text-yellow-500 fill-current'
+                          }`} />
+                          <span className="text-sm">{siswa.bintangBulanIni || 0}</span>
+                        </div>
+                        {/* Tooltip */}
+                        <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block z-10">
+                          <div className="bg-gray-800 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap shadow-lg">
+                            <div className="font-semibold mb-1">Total Bintang Bulan Ini</div>
+                            <div className="text-gray-300">Reset otomatis tiap awal bulan</div>
+                            <div className="mt-1 text-yellow-300">
+                              Mumtaz: 3★ | Jayyid Jiddan: 2★ | Jayyid: 1★
+                            </div>
+                            {/* Arrow */}
+                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                          </div>
+                        </div>
+                        {/* Info text for mobile */}
+                        <span className="text-xs text-gray-400 mt-1 sm:hidden flex items-center">
+                          <Info className="w-3 h-3 mr-0.5" />
+                          Bulan ini
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 ))}

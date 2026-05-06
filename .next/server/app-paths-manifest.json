@@ -1,8 +1,7 @@
 {
   "/page": "app/page.js",
-  "/murid/[id]/page": "app/murid/[id]/page.js",
-  "/admin/dashboard/pengaturan/page": "app/admin/dashboard/pengaturan/page.js",
-  "/admin/dashboard/murid/page": "app/admin/dashboard/murid/page.js",
-  "/admin/dashboard/guru/page": "app/admin/dashboard/guru/page.js",
-  "/admin/dashboard/laporan/page": "app/admin/dashboard/laporan/page.js"
+  "/login/page": "app/login/page.js",
+  "/guru/jurnal/page": "app/guru/jurnal/page.js",
+  "/guru/dashboard/page": "app/guru/dashboard/page.js",
+  "/guru/dashboard/siswa/page": "app/guru/dashboard/siswa/page.js"
 }

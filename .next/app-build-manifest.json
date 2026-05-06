@@ -16,40 +16,30 @@
       "static/chunks/main-app.js",
       "static/chunks/app/login/page.js"
     ],
-    "/admin/dashboard/page": [
+    "/guru/dashboard/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/admin/dashboard/page.js"
+      "static/chunks/app/guru/dashboard/page.js"
     ],
-    "/admin/dashboard/layout": [
+    "/guru/dashboard/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/admin/dashboard/layout.js"
+      "static/chunks/app/guru/dashboard/layout.js"
     ],
-    "/admin/dashboard/guru/page": [
+    "/guru/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/admin/dashboard/guru/page.js"
+      "static/chunks/app/guru/layout.js"
     ],
-    "/admin/dashboard/murid/page": [
+    "/guru/dashboard/siswa/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/admin/dashboard/murid/page.js"
+      "static/chunks/app/guru/dashboard/siswa/page.js"
     ],
-    "/admin/dashboard/laporan/page": [
+    "/guru/jurnal/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/admin/dashboard/laporan/page.js"
-    ],
-    "/admin/dashboard/pengaturan/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/dashboard/pengaturan/page.js"
-    ],
-    "/murid/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/murid/[id]/page.js"
+      "static/chunks/app/guru/jurnal/page.js"
     ]
   }
 }
