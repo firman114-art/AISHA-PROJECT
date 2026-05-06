@@ -1,452 +1,221 @@
 -- =============================================
--- Monitoring Setoran Santri - Database Schema
+-- AISHA - Monitoring Setoran Santri
+-- Database Schema for Supabase (UNIFIED VERSION)
+-- =============================================
+-- Jalankan seluruh file ini SEKALI di Supabase SQL Editor
 -- =============================================
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- =============================================
--- USERS TABLE (extends auth.users)
+-- STEP 1: CREATE ALL TABLES
 -- =============================================
-CREATE TABLE public.users (
+
+-- 1. PROFILES TABLE (extends auth.users)
+CREATE TABLE public.profiles (
   id uuid REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   email text UNIQUE NOT NULL,
-  nama text NOT NULL,
+  full_name text NOT NULL,
   role text NOT NULL CHECK (role IN ('admin', 'guru', 'murid')),
+  class_id uuid, -- FK to classes (added later)
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Enable RLS
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+-- 2. CLASSES TABLE
+CREATE TABLE public.classes (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name text NOT NULL,
+  teacher_id uuid REFERENCES public.profiles ON DELETE SET NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
 
--- Policies for users table
-CREATE POLICY "Users can view own data" 
-  ON public.users FOR SELECT 
-  USING (auth.uid() = id);
-
-CREATE POLICY "Admin can view all users" 
-  ON public.users FOR SELECT 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
-
-CREATE POLICY "Admin can insert users" 
-  ON public.users FOR INSERT 
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
-
-CREATE POLICY "Admin can update users" 
-  ON public.users FOR UPDATE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
-
--- =============================================
--- MURID TABLE
--- =============================================
+-- 3. MURID TABLE (Student Details)
 CREATE TABLE public.murid (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id uuid REFERENCES public.users ON DELETE CASCADE NOT NULL,
+  user_id uuid REFERENCES public.profiles ON DELETE CASCADE NOT NULL,
   nis text UNIQUE NOT NULL,
   kelas text NOT NULL,
   tahun_masuk integer NOT NULL,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Enable RLS
-ALTER TABLE public.murid ENABLE ROW LEVEL SECURITY;
-
--- Policies for murid table
-CREATE POLICY "Anyone can view murid" 
-  ON public.murid FOR SELECT 
-  TO PUBLIC 
-  USING (true);
-
-CREATE POLICY "Admin can insert murid" 
-  ON public.murid FOR INSERT 
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
-
-CREATE POLICY "Admin can update murid" 
-  ON public.murid FOR UPDATE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
-
-CREATE POLICY "Admin can delete murid" 
-  ON public.murid FOR DELETE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
-
--- =============================================
--- SETORAN HAFALAN TABLE
--- =============================================
-CREATE TABLE public.setoran_hafalan (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  murid_id uuid REFERENCES public.murid ON DELETE CASCADE NOT NULL,
-  guru_id uuid REFERENCES public.users ON DELETE CASCADE NOT NULL,
-  surat text NOT NULL,
-  ayat_start integer NOT NULL,
-  ayat_end integer NOT NULL,
-  status text NOT NULL CHECK (status IN ('mengulang', 'lancar', 'bagus', 'sangat_bagus')),
-  catatan text,
-  tanggal date NOT NULL,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
--- Enable RLS
-ALTER TABLE public.setoran_hafalan ENABLE ROW LEVEL SECURITY;
-
--- Policies for setoran_hafalan
-CREATE POLICY "Anyone can view setoran" 
-  ON public.setoran_hafalan FOR SELECT 
-  TO PUBLIC 
-  USING (true);
-
-CREATE POLICY "Guru and admin can insert setoran" 
-  ON public.setoran_hafalan FOR INSERT 
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
-CREATE POLICY "Guru and admin can update setoran" 
-  ON public.setoran_hafalan FOR UPDATE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
-CREATE POLICY "Guru and admin can delete setoran" 
-  ON public.setoran_hafalan FOR DELETE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
--- =============================================
--- SETORAN TILAWAH TABLE
--- =============================================
-CREATE TABLE public.setoran_tilawah (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  murid_id uuid REFERENCES public.murid ON DELETE CASCADE NOT NULL,
-  guru_id uuid REFERENCES public.users ON DELETE CASCADE NOT NULL,
-  surat text NOT NULL,
-  ayat_start integer NOT NULL,
-  ayat_end integer NOT NULL,
-  nilai integer NOT NULL CHECK (nilai >= 0 AND nilai <= 100),
-  catatan text,
-  tanggal date NOT NULL,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
--- Enable RLS
-ALTER TABLE public.setoran_tilawah ENABLE ROW LEVEL SECURITY;
-
--- Policies for setoran_tilawah (same as hafalan)
-CREATE POLICY "Anyone can view tilawah" 
-  ON public.setoran_tilawah FOR SELECT 
-  TO PUBLIC 
-  USING (true);
-
-CREATE POLICY "Guru and admin can insert tilawah" 
-  ON public.setoran_tilawah FOR INSERT 
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
-CREATE POLICY "Guru and admin can update tilawah" 
-  ON public.setoran_tilawah FOR UPDATE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
-CREATE POLICY "Guru and admin can delete tilawah" 
-  ON public.setoran_tilawah FOR DELETE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
--- =============================================
--- SETORAN JILID TABLE
--- =============================================
-CREATE TABLE public.setoran_jilid (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  murid_id uuid REFERENCES public.murid ON DELETE CASCADE NOT NULL,
-  guru_id uuid REFERENCES public.users ON DELETE CASCADE NOT NULL,
-  jilid integer NOT NULL,
-  halaman text NOT NULL,
-  status text NOT NULL CHECK (status IN ('mengulang', 'belum_lancar', 'lancar', 'bagus')),
-  catatan text,
-  tanggal date NOT NULL,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
--- Enable RLS
-ALTER TABLE public.setoran_jilid ENABLE ROW LEVEL SECURITY;
-
--- Policies for setoran_jilid (same as hafalan)
-CREATE POLICY "Anyone can view jilid" 
-  ON public.setoran_jilid FOR SELECT 
-  TO PUBLIC 
-  USING (true);
-
-CREATE POLICY "Guru and admin can insert jilid" 
-  ON public.setoran_jilid FOR INSERT 
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
-CREATE POLICY "Guru and admin can update jilid" 
-  ON public.setoran_jilid FOR UPDATE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
-CREATE POLICY "Guru and admin can delete jilid" 
-  ON public.setoran_jilid FOR DELETE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
--- =============================================
--- PROGRESS LOGS TABLE (Unified setoran tracking)
--- =============================================
+-- 4. PROGRESS LOGS TABLE (Unified setoran tracking)
 CREATE TABLE public.progress_logs (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  murid_id uuid REFERENCES public.murid ON DELETE CASCADE NOT NULL,
-  guru_id uuid REFERENCES public.users ON DELETE CASCADE NOT NULL,
-  jenis_setoran text NOT NULL CHECK (jenis_setoran IN ('hafalan', 'tilawah', 'jilid')),
-  -- Juz 1-30 untuk Hafalan/Tilawah (Smart Filter)
+  murid_id uuid REFERENCES public.profiles ON DELETE CASCADE NOT NULL,
+  teacher_id uuid REFERENCES public.profiles ON DELETE CASCADE NOT NULL,
+  category text NOT NULL CHECK (category IN ('Hafalan', 'Tilawah', 'Jilid')),
   juz integer CHECK (juz >= 1 AND juz <= 30),
-  surat text,
-  ayat_start integer,
-  ayat_end integer,
-  -- Kategori Jilid: Jilid 1-5, Ghorib, Tajwid
-  jilid_kategori text,
-  halaman text,
-  -- Sistem Predikat: Mumtaz, Jayyid Jiddan, Jayyid, Maqbul
-  status text NOT NULL,
+  surah_name text,
+  materi_jilid text,
+  ayat_range text,
+  predikat text NOT NULL CHECK (predikat IN ('mumtaz', 'jayyid_jiddan', 'jayyid', 'maqbul', 'dhaif')),
   nilai integer CHECK (nilai >= 0 AND nilai <= 100),
-  -- Counter Kesalahan (Kelancaran, Fashoah, Tajwid)
   err_kelancaran integer DEFAULT 0 CHECK (err_kelancaran >= 0),
   err_fashoah integer DEFAULT 0 CHECK (err_fashoah >= 0),
   err_tajwid integer DEFAULT 0 CHECK (err_tajwid >= 0),
+  stars_earned integer DEFAULT 0 CHECK (stars_earned >= 0),
   catatan text,
   tanggal date NOT NULL DEFAULT CURRENT_DATE,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Enable RLS
-ALTER TABLE public.progress_logs ENABLE ROW LEVEL SECURITY;
-
--- Policies for progress_logs
-CREATE POLICY "Anyone can view progress_logs" 
-  ON public.progress_logs FOR SELECT 
-  TO PUBLIC 
-  USING (true);
-
-CREATE POLICY "Guru and admin can insert progress_logs" 
-  ON public.progress_logs FOR INSERT 
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
-CREATE POLICY "Guru and admin can update progress_logs" 
-  ON public.progress_logs FOR UPDATE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
-CREATE POLICY "Guru and admin can delete progress_logs" 
-  ON public.progress_logs FOR DELETE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
--- Index for progress_logs
-CREATE INDEX idx_progress_logs_murid_id ON public.progress_logs(murid_id);
-CREATE INDEX idx_progress_logs_tanggal ON public.progress_logs(tanggal);
-CREATE INDEX idx_progress_logs_jenis ON public.progress_logs(jenis_setoran);
-
--- =============================================
--- ATTENDANCE TABLE (Absensi Siswa)
--- =============================================
+-- 5. ATTENDANCE TABLE (Absensi Siswa)
 CREATE TABLE public.attendance (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  kelas_id text NOT NULL,
-  guru_id uuid REFERENCES public.users ON DELETE CASCADE NOT NULL,
-  siswa_id text NOT NULL,
-  tanggal date NOT NULL DEFAULT CURRENT_DATE,
-  status text NOT NULL CHECK (status IN ('hadir', 'sakit', 'izin', 'alpa')),
+  student_id uuid REFERENCES public.profiles ON DELETE CASCADE NOT NULL,
+  class_id uuid REFERENCES public.classes ON DELETE CASCADE,
+  status text NOT NULL CHECK (status IN ('Hadir', 'Sakit', 'Izin', 'Alpa')),
+  date date NOT NULL DEFAULT CURRENT_DATE,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-  -- Unique constraint: satu siswa hanya bisa 1 absensi per hari
-  UNIQUE(kelas_id, siswa_id, tanggal)
+  UNIQUE(student_id, date)
 );
 
--- Enable RLS
-ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
-
--- Policies for attendance
-CREATE POLICY "Anyone can view attendance" 
-  ON public.attendance FOR SELECT 
-  TO PUBLIC 
-  USING (true);
-
-CREATE POLICY "Guru and admin can insert attendance" 
-  ON public.attendance FOR INSERT 
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
-CREATE POLICY "Guru and admin can update attendance" 
-  ON public.attendance FOR UPDATE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
-CREATE POLICY "Guru and admin can delete attendance" 
-  ON public.attendance FOR DELETE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
--- Indexes for attendance
-CREATE INDEX idx_attendance_kelas_id ON public.attendance(kelas_id);
-CREATE INDEX idx_attendance_tanggal ON public.attendance(tanggal);
-CREATE INDEX idx_attendance_siswa_id ON public.attendance(siswa_id);
-
--- =============================================
--- TEACHER JOURNALS TABLE (Jurnal Guru)
--- =============================================
+-- 6. TEACHER JOURNALS TABLE (Jurnal Guru)
 CREATE TABLE public.teacher_journals (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  kelas_id text NOT NULL,
-  guru_id uuid REFERENCES public.users ON DELETE CASCADE NOT NULL,
-  tanggal date NOT NULL DEFAULT CURRENT_DATE,
-  agenda_materi text NOT NULL,
-  catatan_kejadian text,
+  teacher_id uuid REFERENCES public.profiles ON DELETE CASCADE NOT NULL,
+  class_id uuid REFERENCES public.classes ON DELETE CASCADE,
+  agenda text NOT NULL,
+  catatan text,
+  date date NOT NULL DEFAULT CURRENT_DATE,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Enable RLS
+-- 7. SCHOOL SETTINGS TABLE
+CREATE TABLE public.school_settings (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  school_name text NOT NULL DEFAULT 'SDIT Al-Insan Pinrang',
+  logo_url text,
+  address text,
+  phone text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- =============================================
+-- STEP 2: ADD FOREIGN KEYS (Circular deps)
+-- =============================================
+
+ALTER TABLE public.profiles 
+  ADD CONSTRAINT fk_profiles_class 
+  FOREIGN KEY (class_id) REFERENCES public.classes(id) ON DELETE SET NULL;
+
+-- =============================================
+-- STEP 3: ENABLE RLS ON ALL TABLES
+-- =============================================
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.murid ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.progress_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.teacher_journals ENABLE ROW LEVEL SECURITY;
-
--- Policies for teacher_journals
-CREATE POLICY "Anyone can view teacher_journals" 
-  ON public.teacher_journals FOR SELECT 
-  TO PUBLIC 
-  USING (true);
-
-CREATE POLICY "Guru and admin can insert teacher_journals" 
-  ON public.teacher_journals FOR INSERT 
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
-CREATE POLICY "Guru and admin can update own journals" 
-  ON public.teacher_journals FOR UPDATE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
-CREATE POLICY "Guru and admin can delete own journals" 
-  ON public.teacher_journals FOR DELETE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('guru', 'admin')
-    )
-  );
-
--- Indexes for teacher_journals
-CREATE INDEX idx_teacher_journals_kelas_id ON public.teacher_journals(kelas_id);
-CREATE INDEX idx_teacher_journals_tanggal ON public.teacher_journals(tanggal);
-CREATE INDEX idx_teacher_journals_guru_id ON public.teacher_journals(guru_id);
+ALTER TABLE public.school_settings ENABLE ROW LEVEL SECURITY;
 
 -- =============================================
--- FUNCTIONS & TRIGGERS
+-- STEP 4: CREATE RLS POLICIES
 -- =============================================
+
+-- PROFILES: Admin full, Public read
+CREATE POLICY "Admin full access on profiles" ON public.profiles FOR ALL 
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Users view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Public view profiles" ON public.profiles FOR SELECT TO PUBLIC USING (true);
+
+-- CLASSES: Admin manage, Public read
+CREATE POLICY "Admin manage classes" ON public.classes FOR ALL 
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Public view classes" ON public.classes FOR SELECT TO PUBLIC USING (true);
+
+-- MURID: Admin manage, Public read
+CREATE POLICY "Admin manage murid" ON public.murid FOR ALL 
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Public view murid" ON public.murid FOR SELECT TO PUBLIC USING (true);
+
+-- PROGRESS_LOGS: Guru/Admin write, Public read
+CREATE POLICY "Guru admin write progress" ON public.progress_logs FOR ALL 
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('guru', 'admin')));
+CREATE POLICY "Public view progress" ON public.progress_logs FOR SELECT TO PUBLIC USING (true);
+
+-- ATTENDANCE: Guru/Admin write, Public read
+CREATE POLICY "Guru admin write attendance" ON public.attendance FOR ALL 
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('guru', 'admin')));
+CREATE POLICY "Public view attendance" ON public.attendance FOR SELECT TO PUBLIC USING (true);
+
+-- TEACHER_JOURNALS: Guru/Admin write, Public read
+CREATE POLICY "Guru admin write journals" ON public.teacher_journals FOR ALL 
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('guru', 'admin')));
+CREATE POLICY "Public view journals" ON public.teacher_journals FOR SELECT TO PUBLIC USING (true);
+
+-- SCHOOL_SETTINGS: Admin manage, Public read
+CREATE POLICY "Admin manage settings" ON public.school_settings FOR ALL 
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Public view settings" ON public.school_settings FOR SELECT TO PUBLIC USING (true);
+
+-- =============================================
+-- STEP 5: CREATE INDEXES
+-- =============================================
+
+CREATE INDEX idx_profiles_role ON public.profiles(role);
+CREATE INDEX idx_profiles_class_id ON public.profiles(class_id);
+CREATE INDEX idx_murid_user_id ON public.murid(user_id);
+CREATE INDEX idx_murid_nis ON public.murid(nis);
+CREATE INDEX idx_progress_logs_murid_id ON public.progress_logs(murid_id);
+CREATE INDEX idx_progress_logs_teacher_id ON public.progress_logs(teacher_id);
+CREATE INDEX idx_progress_logs_tanggal ON public.progress_logs(tanggal);
+CREATE INDEX idx_progress_logs_category ON public.progress_logs(category);
+CREATE INDEX idx_progress_logs_predikat ON public.progress_logs(predikat);
+CREATE INDEX idx_progress_logs_created_at ON public.progress_logs(created_at);
+CREATE INDEX idx_attendance_class_id ON public.attendance(class_id);
+CREATE INDEX idx_attendance_date ON public.attendance(date);
+CREATE INDEX idx_attendance_student_id ON public.attendance(student_id);
+CREATE INDEX idx_teacher_journals_class_id ON public.teacher_journals(class_id);
+CREATE INDEX idx_teacher_journals_date ON public.teacher_journals(date);
+CREATE INDEX idx_teacher_journals_teacher_id ON public.teacher_journals(teacher_id);
+CREATE INDEX idx_classes_teacher_id ON public.classes(teacher_id);
+
+-- =============================================
+-- STEP 6: FUNCTIONS & TRIGGERS
+-- =============================================
+
+-- Function to calculate stars from predikat
+CREATE OR REPLACE FUNCTION public.calculate_stars(predikat text)
+RETURNS integer AS $$
+BEGIN
+  RETURN CASE predikat
+    WHEN 'mumtaz' THEN 3
+    WHEN 'jayyid_jiddan' THEN 2
+    WHEN 'jayyid' THEN 1
+    ELSE 0
+  END;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+-- Function to auto-set stars_earned
+CREATE OR REPLACE FUNCTION public.set_stars_earned()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.stars_earned := public.calculate_stars(NEW.predikat);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger for auto-setting stars
+CREATE TRIGGER trg_set_stars_earned
+  BEFORE INSERT OR UPDATE OF predikat ON public.progress_logs
+  FOR EACH ROW EXECUTE FUNCTION public.set_stars_earned();
 
 -- Function to handle new user signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.users (id, email, nama, role)
+  INSERT INTO public.profiles (id, email, full_name, role)
   VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'nama', NEW.email),
+    NEW.id, NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
     COALESCE(NEW.raw_user_meta_data->>'role', 'murid')
   );
   RETURN NEW;
@@ -459,26 +228,26 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- =============================================
--- INDEXES
--- =============================================
-CREATE INDEX idx_murid_user_id ON public.murid(user_id);
-CREATE INDEX idx_murid_nis ON public.murid(nis);
-CREATE INDEX idx_hafalan_murid_id ON public.setoran_hafalan(murid_id);
-CREATE INDEX idx_hafalan_tanggal ON public.setoran_hafalan(tanggal);
-CREATE INDEX idx_tilawah_murid_id ON public.setoran_tilawah(murid_id);
-CREATE INDEX idx_tilawah_tanggal ON public.setoran_tilawah(tanggal);
-CREATE INDEX idx_jilid_murid_id ON public.setoran_jilid(murid_id);
-CREATE INDEX idx_jilid_tanggal ON public.setoran_jilid(tanggal);
-
--- =============================================
--- SAMPLE DATA (Optional)
+-- STEP 7: VIEWS
 -- =============================================
 
--- Insert sample murid (after user is created via auth)
--- INSERT INTO public.users (id, email, nama, role) VALUES
---   ('uuid-here', 'murid1@alihsan.sch.id', 'Ahmad Fauzi', 'murid'),
---   ('uuid-here', 'murid2@alihsan.sch.id', 'Fatimah Azzahra', 'murid');
+CREATE OR REPLACE VIEW public.monthly_stars_summary AS
+SELECT 
+  murid_id,
+  DATE_TRUNC('month', created_at) as month,
+  SUM(stars_earned) as total_stars,
+  COUNT(*) as total_setoran
+FROM public.progress_logs
+GROUP BY murid_id, DATE_TRUNC('month', created_at);
 
--- INSERT INTO public.murid (user_id, nis, kelas, tahun_masuk) VALUES
---   ('uuid-here', '2024001', 'Kelas 1', 2024),
---   ('uuid-here', '2024002', 'Kelas 1', 2024);
+-- =============================================
+-- STEP 8: DEFAULT DATA
+-- =============================================
+
+INSERT INTO public.school_settings (school_name, logo_url, address, phone)
+VALUES ('SDIT Al-Insan Pinrang', '/logo-alinsan.svg', 'Kabupaten Pinrang, Sulawesi Selatan', '000000000000')
+ON CONFLICT DO NOTHING;
+
+-- =============================================
+-- DONE! Database siap digunakan.
+-- =============================================
