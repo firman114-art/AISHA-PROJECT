@@ -1,22 +1,107 @@
-import { Users, GraduationCap, BookOpen, TrendingUp } from 'lucide-react'
+'use client'
 
-// Mock data untuk statistik
-const stats = [
-  { label: 'Total Murid', value: 156, icon: Users, color: 'bg-blue-500' },
-  { label: 'Total Guru', value: 24, icon: GraduationCap, color: 'bg-purple-500' },
-  { label: 'Setoran Bulan Ini', value: 342, icon: BookOpen, color: 'bg-red-500' },
-  { label: 'Rata-rata Nilai', value: 85, icon: TrendingUp, color: 'bg-orange-500' },
-]
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Users, GraduationCap, BookOpen, School, UserPlus, Settings } from 'lucide-react'
+import { createBrowserClient } from '@/lib/supabase-browser'
 
-// Mock data untuk aktivitas terbaru
-const recentActivities = [
-  { id: 1, action: 'Setoran Hafalan', murid: 'Ahmad Fauzi', guru: 'Ust. Abdullah', surat: 'Al-Baqarah 1-5', status: 'bagus', time: '2 menit yang lalu' },
-  { id: 2, action: 'Setoran Tilawah', murid: 'Fatimah Azzahra', guru: 'Ust. Ahmad', surat: 'An-Naba', status: 'lancar', time: '15 menit yang lalu' },
-  { id: 3, action: 'Setoran Jilid', murid: 'Muhammad Rizky', guru: 'Ust. Abdullah', surat: 'Jilid 2', status: 'lancar', time: '30 menit yang lalu' },
-  { id: 4, action: 'Setoran Hafalan', murid: 'Aisyah Putri', guru: 'Ust. Ahmad', surat: 'Ali Imran 1-10', status: 'sangat_bagus', time: '1 jam yang lalu' },
-]
+interface Stats {
+  totalMurid: number
+  totalGuru: number
+  totalSetoran: number
+  totalKelas: number
+}
 
 export default function AdminDashboardPage() {
+  const [stats, setStats] = useState<Stats>({
+    totalMurid: 0,
+    totalGuru: 0,
+    totalSetoran: 0,
+    totalKelas: 0,
+  })
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    const supabase = createBrowserClient()
+    
+    async function fetchStats() {
+      try {
+        // Count murid
+        const { count: muridCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'murid')
+
+        // Count guru
+        const { count: guruCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'guru')
+
+        // Count setoran
+        const { count: setoranCount } = await supabase
+          .from('progress_logs')
+          .select('*', { count: 'exact', head: true })
+
+        // Count kelas
+        const { count: kelasCount } = await supabase
+          .from('classes')
+          .select('*', { count: 'exact', head: true })
+
+        setStats({
+          totalMurid: muridCount || 0,
+          totalGuru: guruCount || 0,
+          totalSetoran: setoranCount || 0,
+          totalKelas: kelasCount || 0,
+        })
+      } catch (error) {
+        console.error('Error fetching stats:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
+
+  const menuCards = [
+    {
+      title: 'Kelola Guru',
+      description: 'Tambah, edit, dan hapus data guru',
+      icon: GraduationCap,
+      href: '/admin/dashboard/guru',
+      color: 'bg-purple-500',
+    },
+    {
+      title: 'Kelola Kelas',
+      description: 'Buat kelas dan assign guru',
+      icon: School,
+      href: '/admin/dashboard/kelas',
+      color: 'bg-blue-500',
+    },
+    {
+      title: 'Kelola Murid',
+      description: 'Tambah murid ke kelas',
+      icon: Users,
+      href: '/admin/dashboard/murid',
+      color: 'bg-green-500',
+    },
+    {
+      title: 'Tambah User',
+      description: 'Buat akun guru atau murid baru',
+      icon: UserPlus,
+      href: '/admin/dashboard/pengaturan',
+      color: 'bg-orange-500',
+    },
+  ]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Welcome */}
@@ -29,63 +114,84 @@ export default function AdminDashboardPage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon
-          return (
-            <div key={stat.label} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">{stat.label}</p>
-                  <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
-                </div>
-                <div className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}>
-                  <Icon className="w-6 h-6 text-white" />
-                </div>
-              </div>
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Murid</p>
+              <p className="text-2xl font-bold text-gray-800">{stats.totalMurid}</p>
             </div>
-          )
-        })}
+            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Guru</p>
+              <p className="text-2xl font-bold text-gray-800">{stats.totalGuru}</p>
+            </div>
+            <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+              <GraduationCap className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Setoran</p>
+              <p className="text-2xl font-bold text-gray-800">{stats.totalSetoran}</p>
+            </div>
+            <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center">
+              <BookOpen className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Kelas</p>
+              <p className="text-2xl font-bold text-gray-800">{stats.totalKelas}</p>
+            </div>
+            <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+              <School className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Recent Activity */}
+      {/* Menu Management */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-800">Aktivitas Terbaru</h3>
+          <h3 className="text-lg font-semibold text-gray-800">Menu Admin</h3>
+          <p className="text-sm text-gray-600 mt-1">Kelola guru, kelas, dan murid</p>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktivitas</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Murid</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Guru</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Detail</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Waktu</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {recentActivities.map((activity) => (
-                <tr key={activity.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-800">{activity.action}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{activity.murid}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{activity.guru}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{activity.surat}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      activity.status === 'sangat_bagus' ? 'bg-red-100 text-red-700' :
-                      activity.status === 'bagus' ? 'bg-blue-100 text-blue-700' :
-                      activity.status === 'lancar' ? 'bg-green-100 text-green-700' :
-                      'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {activity.status.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{activity.time}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {menuCards.map((menu) => {
+              const Icon = menu.icon
+              return (
+                <Link
+                  key={menu.title}
+                  href={menu.href}
+                  className="flex items-center p-4 bg-gray-50 hover:bg-red-50 rounded-xl transition-colors group"
+                >
+                  <div className={`w-12 h-12 ${menu.color} rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform`}>
+                    <Icon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800 group-hover:text-red-600 transition-colors">
+                      {menu.title}
+                    </h4>
+                    <p className="text-sm text-gray-600">{menu.description}</p>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
         </div>
       </div>
     </div>
