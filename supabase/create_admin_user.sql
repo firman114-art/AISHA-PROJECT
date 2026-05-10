@@ -1,25 +1,28 @@
 -- SQL untuk membuat admin user di Supabase
 -- Jalankan ini di Supabase Dashboard → SQL Editor
+-- ⚠️ IMPORTANT: Ganti 'UUID_ADMIN_USER' dengan UUID dari user yang dibuat di Auth → Users
 
--- 1. Buat user di auth.users (gunakan Supabase Dashboard Auth UI)
--- Atau pakai fungsi ini kalau sudah setup admin API
+-- Cara:
+-- 1. Buka Supabase Dashboard → Authentication → Users
+-- 2. Buat user baru dengan email: admin@alinsan.sch.id, password: admin123
+-- 3. Copy UUID user tersebut
+-- 4. Ganti 'UUID_ADMIN_USER' di bawah dengan UUID yang dicopy
+-- 5. Jalankan SQL ini
 
--- 2. Insert profile untuk admin
+-- Insert admin profile
 -- Ganti 'UUID_ADMIN_USER' dengan UUID dari user yang dibuat di Auth
 
-INSERT INTO public.profiles (id, email, full_name, role, created_at, updated_at)
+-- Insert admin profile (tanpa created_at dan updated_at)
+INSERT INTO public.profiles (id, email, full_name, role)
 VALUES (
     'UUID_ADMIN_USER',  -- GANTI INI dengan UUID dari Auth → Users
     'admin@alinsan.sch.id',
     'Administrator',
-    'admin',
-    NOW(),
-    NOW()
+    'admin'
 )
 ON CONFLICT (id) DO UPDATE 
 SET 
-    role = 'admin',
-    updated_at = NOW();
+    role = 'admin';
 
 -- 3. Verifikasi user berhasil dibuat
 SELECT * FROM public.profiles WHERE role = 'admin';
