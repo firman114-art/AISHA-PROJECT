@@ -1,24 +1,106 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, Search, Edit2, Trash2, GraduationCap } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, Search, Edit2, Trash2, GraduationCap, X, Loader2 } from 'lucide-react'
+import { createBrowserClient } from '@/lib/supabase-browser'
 
-// Mock data guru (Wali Kelas)
-const mockGuru = [
-  { id: 1, nama: 'Ust. Abdullah', email: 'abdullah@alihsan.sch.id', no_hp: '08123456789', jumlah_murid: 25 },
-  { id: 2, nama: 'Ust. Ahmad', email: 'ahmad@alihsan.sch.id', no_hp: '08123456790', jumlah_murid: 30 },
-  { id: 3, nama: 'Ustz. Fatimah', email: 'fatimah@alihsan.sch.id', no_hp: '08123456791', jumlah_murid: 28 },
-  { id: 4, nama: 'Ust. Muhammad', email: 'muhammad@alihsan.sch.id', no_hp: '08123456792', jumlah_murid: 22 },
-]
+interface Guru {
+  id: string
+  full_name: string
+  email: string
+  created_at: string
+}
 
 export default function ManajemenGuruPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [guruList, setGuruList] = useState<Guru[]>([])
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [message, setMessage] = useState('')
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    fullName: '',
+  })
 
-  const filteredGuru = mockGuru.filter(guru =>
-    guru.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    guru.email.toLowerCase().includes(searchQuery.toLowerCase())
+  const supabase = createBrowserClient()
+
+  // Fetch guru data
+  useEffect(() => {
+    async function fetchGuru() {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, full_name, email, created_at')
+          .eq('role', 'guru')
+          .order('full_name')
+        
+        if (error) throw error
+        setGuruList(data || [])
+      } catch (err) {
+        console.error('Error fetching guru:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchGuru()
+  }, [])
+
+  const filteredGuru = guruList.filter(guru =>
+    guru.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    guru.email?.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setMessage('')
+
+    try {
+      const response = await fetch('/api/admin/create-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
+          role: 'guru',
+        }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setMessage('✅ Guru berhasil ditambahkan!')
+        setFormData({ email: '', password: '', fullName: '' })
+        
+        // Refresh list
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, full_name, email, created_at')
+          .eq('role', 'guru')
+          .order('full_name')
+        
+        setGuruList(data || [])
+        
+        // Close modal after 2 seconds
+        setTimeout(() => {
+          setShowAddModal(false)
+          setMessage('')
+        }, 2000)
+      } else {
+        setMessage(`❌ ${result.error || 'Gagal menambahkan guru'}`)
+      }
+    } catch (err) {
+      setMessage('❌ Terjadi kesalahan. Coba lagi.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -52,48 +134,157 @@ export default function ManajemenGuruPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. HP</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Murid</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredGuru.map((guru) => (
-                <tr key={guru.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                        <GraduationCap className="w-5 h-5 text-red-600" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-800">{guru.nama}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{guru.email}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{guru.no_hp}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{guru.jumlah_murid} murid</td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <button className="p-1 hover:bg-gray-100 rounded">
-                        <Edit2 className="w-4 h-4 text-gray-600" />
-                      </button>
-                      <button className="p-1 hover:bg-gray-100 rounded">
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-red-600" />
         </div>
-      </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal Dibuat</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredGuru.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                      Belum ada data guru. Klik "Tambah Guru" untuk menambahkan.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredGuru.map((guru) => (
+                    <tr key={guru.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                            <GraduationCap className="w-5 h-5 text-red-600" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-800">{guru.full_name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{guru.email}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {new Date(guru.created_at).toLocaleDateString('id-ID')}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <div className="flex items-center space-x-2">
+                          <button className="p-1 hover:bg-gray-100 rounded">
+                            <Edit2 className="w-4 h-4 text-gray-600" />
+                          </button>
+                          <button className="p-1 hover:bg-gray-100 rounded">
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Add Guru Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h3 className="text-lg font-semibold text-gray-800">Tambah Guru Baru</h3>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-full"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {message && (
+                <div className={`p-3 rounded-lg text-sm ${
+                  message.includes('✅') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                }`}>
+                  {message}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nama Lengkap <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="Ustadz Ahmad"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="guru@alinsan.sch.id"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="••••••••"
+                  minLength={6}
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">Minimal 6 karakter</p>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Menyimpan...
+                    </>
+                  ) : (
+                    'Simpan'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
