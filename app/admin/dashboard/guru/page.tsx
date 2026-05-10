@@ -111,8 +111,12 @@ export default function ManajemenGuruPage() {
           <p className="text-slate-600">Kelola data tenaga pengajar</p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium shadow-md"
+          onClick={() => {
+            console.log('Opening modal...')
+            setShowAddModal(true)
+          }}
+          className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium shadow-md active:scale-95 transform"
+          type="button"
         >
           <Plus className="w-4 h-4 mr-2" />
           Tambah Guru
@@ -193,8 +197,17 @@ export default function ManajemenGuruPage() {
 
       {/* Add Guru Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+          style={{ zIndex: 9999 }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowAddModal(false)
+          }}
+        >
+          <div 
+            className="bg-white rounded-xl shadow-xl max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between p-6 border-b">
               <h3 className="text-lg font-semibold text-gray-800">Tambah Guru Baru</h3>
               <button
