@@ -1,4 +1,5 @@
 'use client'
+// Login page with simple auth - no Supabase required
 
 import { useState } from 'react'
 import Link from 'next/link'
