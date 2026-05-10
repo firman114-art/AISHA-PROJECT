@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Users, GraduationCap, BookOpen, School, UserPlus, Settings } from 'lucide-react'
-import { createBrowserClient } from '@/lib/supabase-browser'
+import { getCurrentUser, simpleLogout, hasRole } from '@/lib/simple-auth'
+import { useRouter } from 'next/navigation'
 
 interface Stats {
   totalMurid: number
@@ -13,55 +14,36 @@ interface Stats {
 }
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<Stats>({
-    totalMurid: 0,
-    totalGuru: 0,
-    totalSetoran: 0,
-    totalKelas: 0,
-  })
-  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const [user, setUser] = useState(getCurrentUser())
+  
+  // Proteksi route - redirect kalau bukan admin
   useEffect(() => {
-    const supabase = createBrowserClient()
-    
-    async function fetchStats() {
-      try {
-        // Count murid
-        const { count: muridCount } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('role', 'murid')
-
-        // Count guru
-        const { count: guruCount } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('role', 'guru')
-
-        // Count setoran
-        const { count: setoranCount } = await supabase
-          .from('progress_logs')
-          .select('*', { count: 'exact', head: true })
-
-        // Count kelas
-        const { count: kelasCount } = await supabase
-          .from('classes')
-          .select('*', { count: 'exact', head: true })
-
-        setStats({
-          totalMurid: muridCount || 0,
-          totalGuru: guruCount || 0,
-          totalSetoran: setoranCount || 0,
-          totalKelas: kelasCount || 0,
-        })
-      } catch (error) {
-        console.error('Error fetching stats:', error)
-      } finally {
-        setLoading(false)
-      }
+    const currentUser = getCurrentUser()
+    if (!currentUser) {
+      router.push('/login')
+      return
     }
+    if (!hasRole('admin')) {
+      router.push('/')
+      return
+    }
+    setUser(currentUser)
+  }, [router])
 
-    fetchStats()
-  }, [])
+  // Mock stats (tanpa Supabase)
+  const [stats, setStats] = useState<Stats>({
+    totalMurid: 24,
+    totalGuru: 3,
+    totalSetoran: 156,
+    totalKelas: 4,
+  })
+  const [loading, setLoading] = useState(false)
+
+  const handleLogout = () => {
+    simpleLogout()
+    router.push('/login')
+  }
 
   const menuCards = [
     {
@@ -104,12 +86,20 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Welcome */}
-      <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-xl p-6 text-white shadow-lg">
-        <h2 className="text-2xl font-bold mb-2">Selamat Datang, Admin!</h2>
-        <p className="text-red-100">
-          Pantau dan kelola data siswa, guru, dan setoran dengan mudah.
-        </p>
+      {/* Header dengan Logout */}
+      <div className="flex justify-between items-center">
+        <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-xl p-6 text-white shadow-lg flex-1 mr-4">
+          <h2 className="text-2xl font-bold mb-2">Selamat Datang, {user?.full_name || 'Admin'}!</h2>
+          <p className="text-red-100">
+            Pantau dan kelola data siswa, guru, dan setoran dengan mudah.
+          </p>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors shadow-lg"
+        >
+          Logout
+        </button>
       </div>
 
       {/* Stats Grid */}

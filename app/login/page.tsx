@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle } from 'lucide-react'
-import { createBrowserClient } from '@/lib/supabase-browser'
+import { simpleLogin, getDashboardPath } from '@/lib/simple-auth'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -20,50 +20,22 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const supabase = createBrowserClient()
-      
-      // 1. Login dengan Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      // Login dengan sistem auth sederhana (hardcoded)
+      const result = simpleLogin(email, password)
 
-      if (authError) {
-        setError('Email atau password salah')
+      if (!result.success) {
+        setError(result.error || 'Login gagal')
         return
       }
 
-      if (!authData.user) {
-        setError('Login gagal')
+      if (!result.user) {
+        setError('User tidak ditemukan')
         return
       }
 
-      // 2. Ambil profile user untuk cek role
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', authData.user.id)
-        .single()
-
-      if (profileError || !profile) {
-        setError('Profile tidak ditemukan')
-        return
-      }
-
-      // 3. Redirect berdasarkan role
-      switch (profile.role) {
-        case 'admin':
-          router.push('/admin/dashboard')
-          break
-        case 'guru':
-          router.push('/guru/dashboard')
-          break
-        case 'murid':
-          router.push('/murid/dashboard')
-          break
-        default:
-          router.push('/')
-      }
+      // Redirect berdasarkan role
+      const dashboardPath = getDashboardPath(result.user.role)
+      router.push(dashboardPath)
     } catch (err) {
       console.error('Login error:', err)
       setError('Terjadi kesalahan. Silakan coba lagi.')
@@ -165,13 +137,23 @@ export default function LoginPage() {
               </button>
             </form>
 
-            {/* Info */}
-            <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-100">
-              <p className="text-sm text-red-700 font-medium mb-2">Login AISHA:</p>
-              <ul className="text-xs text-red-600 space-y-1">
-                <li>• Masukkan email dan password yang terdaftar</li>
-                <li>• Sistem akan mengarahkan sesuai role (Admin/Guru/Murid)</li>
-              </ul>
+            {/* Info - Akun Demo */}
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <p className="text-sm text-blue-800 font-semibold mb-2">📋 Akun Demo (Password: admin123)</p>
+              <div className="text-xs text-blue-700 space-y-1">
+                <div className="flex justify-between">
+                  <span>👤 Admin:</span>
+                  <span className="font-mono">admin@alinsan.sch.id</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>👨‍🏫 Guru:</span>
+                  <span className="font-mono">guru@alinsan.sch.id</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>👦 Murid:</span>
+                  <span className="font-mono">murid@alinsan.sch.id</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
