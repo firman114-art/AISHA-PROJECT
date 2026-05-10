@@ -1,5 +1,6 @@
 // Sistem autentikasi sederhana tanpa Supabase
 // Menggunakan localStorage untuk session management
+// Updated: 2026-05-10 - Trigger redeploy Vercel
 
 export interface User {
   id: string
