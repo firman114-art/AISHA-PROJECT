@@ -2,13 +2,51 @@
 
 import { useState, useEffect } from 'react'
 import { Plus, Search, Edit2, Trash2, GraduationCap, X, Loader2 } from 'lucide-react'
-import { createBrowserClient } from '@/lib/supabase-browser'
 
 interface Guru {
   id: string
   full_name: string
   email: string
   created_at: string
+}
+
+// Mock data guru
+const MOCK_GURU: Guru[] = [
+  {
+    id: '1',
+    full_name: 'Ustadz Ahmad',
+    email: 'ahmad@alinsan.sch.id',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: '2',
+    full_name: 'Ustadzah Fatima',
+    email: 'fatima@alinsan.sch.id',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: '3',
+    full_name: 'Ustadz Ibrahim',
+    email: 'ibrahim@alinsan.sch.id',
+    created_at: new Date().toISOString()
+  }
+]
+
+// Get guru from localStorage or use mock
+const getGuruList = (): Guru[] => {
+  if (typeof window === 'undefined') return MOCK_GURU
+  const stored = localStorage.getItem('aisha_guru_list')
+  if (stored) {
+    return JSON.parse(stored)
+  }
+  localStorage.setItem('aisha_guru_list', JSON.stringify(MOCK_GURU))
+  return MOCK_GURU
+}
+
+// Save guru to localStorage
+const saveGuruList = (guru: Guru[]) => {
+  if (typeof window === 'undefined') return
+  localStorage.setItem('aisha_guru_list', JSON.stringify(guru))
 }
 
 export default function ManajemenGuruPage() {
@@ -26,28 +64,11 @@ export default function ManajemenGuruPage() {
     fullName: '',
   })
 
-  const supabase = createBrowserClient()
-
-  // Fetch guru data
+  // Fetch guru data dari localStorage/mock
   useEffect(() => {
-    async function fetchGuru() {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, full_name, email, created_at')
-          .eq('role', 'guru')
-          .order('full_name')
-        
-        if (error) throw error
-        setGuruList(data || [])
-      } catch (err) {
-        console.error('Error fetching guru:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchGuru()
+    const guru = getGuruList()
+    setGuruList(guru)
+    setLoading(false)
   }, [])
 
   const filteredGuru = guruList.filter(guru =>
@@ -61,40 +82,28 @@ export default function ManajemenGuruPage() {
     setMessage('')
 
     try {
-      const response = await fetch('/api/admin/create-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          fullName: formData.fullName,
-          role: 'guru',
-        }),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        setMessage('✅ Guru berhasil ditambahkan!')
-        setFormData({ email: '', password: '', fullName: '' })
-        
-        // Refresh list
-        const { data } = await supabase
-          .from('profiles')
-          .select('id, full_name, email, created_at')
-          .eq('role', 'guru')
-          .order('full_name')
-        
-        setGuruList(data || [])
-        
-        // Close modal after 2 seconds
-        setTimeout(() => {
-          setShowAddModal(false)
-          setMessage('')
-        }, 2000)
-      } else {
-        setMessage(`❌ ${result.error || 'Gagal menambahkan guru'}`)
+      // Simulasi API call - simpan ke localStorage
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      const newGuru: Guru = {
+        id: Date.now().toString(),
+        full_name: formData.fullName,
+        email: formData.email,
+        created_at: new Date().toISOString()
       }
+      
+      const updatedList = [...guruList, newGuru]
+      saveGuruList(updatedList)
+      setGuruList(updatedList)
+      
+      setMessage('✅ Guru berhasil ditambahkan!')
+      setFormData({ email: '', password: '', fullName: '' })
+      
+      // Close modal after 2 seconds
+      setTimeout(() => {
+        setShowAddModal(false)
+        setMessage('')
+      }, 2000)
     } catch (err) {
       setMessage('❌ Terjadi kesalahan. Coba lagi.')
     } finally {
