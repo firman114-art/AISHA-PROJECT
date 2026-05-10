@@ -6,8 +6,16 @@ import type { Database } from './database.types'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+// Singleton instance untuk mencegah multiple GoTrueClient
+let cachedClient: ReturnType<typeof createClient<Database>> | null = null
+
 // Client untuk Client Components (Browser)
 export const createBrowserClient = () => {
+  // Return cached client kalau sudah ada
+  if (cachedClient) {
+    return cachedClient
+  }
+
   // Fallback untuk development/demo mode
   if (!supabaseUrl || !supabaseAnonKey || 
       supabaseUrl === 'https://your-project.supabase.co' ||
@@ -45,7 +53,7 @@ export const createBrowserClient = () => {
       return chainMethods
     }
 
-    return {
+    cachedClient = {
       from: () => ({
         insert: () => Promise.resolve({ data: null, error: null }),
         upsert: () => Promise.resolve({ data: null, error: null }),
@@ -61,9 +69,12 @@ export const createBrowserClient = () => {
         signOut: () => Promise.resolve({ error: null }),
       },
     } as any
+    
+    return cachedClient
   }
   
-  return createClient<Database>(supabaseUrl, supabaseAnonKey)
+  cachedClient = createClient<Database>(supabaseUrl, supabaseAnonKey)
+  return cachedClient
 }
 
 // Re-export types
